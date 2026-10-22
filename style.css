@@ -235,3 +235,31 @@ textarea#convIn{width:100%;min-height:140px;resize:vertical;border:1px solid var
 .real .iqd{color:var(--accent)}.real .app .iqd{color:#fff}
 .plat{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
 .plat p{margin:0;color:var(--muted);font-size:15px}
+
+.kuf textarea{font-family:"Iraq Kufic","Cairo",sans-serif;font-size:30px;line-height:1.6;direction:rtl}
+.kb-wrap{display:flex;flex-direction:column;gap:6px}
+.kb{background:#d1d3d9;border-radius:14px;padding:8px 4px;display:flex;flex-direction:column;gap:9px;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+:root[data-theme="dark"] .kb{background:#2a2e38}
+.kb .r{display:flex;gap:5px;justify-content:center}
+.kb .k{flex:1 1 0;max-width:56px;height:46px;border:0;border-radius:7px;background:#fff;color:#12141C;box-shadow:0 1px 0 #8b8d92;font:400 30px/1 "Iraq Kufic","Iraq Dinar Digits",sans-serif;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
+.kb .k:active{background:#e4e6ea}
+.kb .k.fn{background:#abb1bb;font:700 15px "Cairo",sans-serif;max-width:none;flex:1.5 1 0}
+.kb .k.fn:active{background:#fff}
+.kb .k.sp{flex:5 1 0;max-width:none;font:600 15px "Cairo",sans-serif}
+.kb .k.ret{flex:2 1 0;max-width:none}
+.kb .k.sym{font-family:"IQD Symbol",sans-serif;font-size:28px}
+.kb-native{align-self:flex-start;font-size:13px;padding:6px 12px}
+.calc{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px;max-width:420px;margin:0 auto}
+.c-screen{background:#12141C;color:#fff;border-radius:14px;padding:10px 14px;text-align:right;min-height:112px;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden}
+.c-expr{min-height:1.4em;font-size:20px;color:#9aa1ae;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c-val{font-size:48px;line-height:1.2;white-space:nowrap;overflow:hidden}
+.c-val .iqd{color:#C8952E;font-size:.85em;margin-inline-start:.15em}
+.c-keys{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+.c-keys button{height:56px;border:0;border-radius:14px;background:var(--bg);color:var(--ink);font:400 30px/1 "Iraq Dinar Digits","Cairo",sans-serif;cursor:pointer;border:1px solid var(--line)}
+.c-keys button:active{transform:scale(.96)}
+.c-keys .op{background:color-mix(in srgb,var(--accent) 14%,var(--surface));color:var(--accent);font-family:"Cairo",sans-serif;font-weight:700}
+.c-keys .eq{background:var(--accent);color:var(--on-accent);border-color:var(--accent);font-family:"Cairo",sans-serif;font-weight:700}
+.c-keys .fnc{font-family:"Cairo",sans-serif;font-size:20px;font-weight:700;color:var(--muted)}
+.c-hist{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:4px;direction:ltr}
+.c-hist li button{width:100%;text-align:right;background:none;border:0;border-bottom:1px dashed var(--line);padding:6px 2px;font:400 20px "Iraq Dinar Digits","Cairo",sans-serif;color:var(--ink);cursor:pointer}
+.c-hist li small{color:var(--muted);font-size:15px}

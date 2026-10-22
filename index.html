@@ -33,6 +33,7 @@
       <a href="#get" data-i18n="nGet">التحميل</a>
       <a href="#digits" data-i18n="nDigits">الأرقام</a>
       <a href="#kufic" data-i18n="nKufic">الكوفي</a>
+      <a href="#calc" data-i18n="nCalc">الحاسبة</a>
       <a href="#tools" data-i18n="nTools">الأدوات</a>
       <a href="#use" data-i18n="nUse">الاستخدام</a>
       <a href="#build" data-i18n="nBuild">البناء</a>
@@ -215,7 +216,11 @@
     <h2 data-i18n="kufH">الخط الكوفي القديم</h2>
     <p class="sec-sub" data-i18n="kufSub">حروف عربية بطابع الكوفي المستقيم، من نفس عائلة الرمز. اكتب وجرّب.</p>
     <div class="kuf">
-      <textarea id="kufIn" rows="3" data-i18n-ph="kufPh" placeholder="اكتب هنا..." spellcheck="false">رمز الدينار العراقي</textarea>
+      <textarea id="kufIn" rows="3" data-i18n-ph="kufPh" placeholder="اكتب هنا..." spellcheck="false" autocomplete="off" inputmode="none">رمز الدينار العراقي</textarea>
+      <div class="kb-wrap">
+        <div class="kb" id="kb" dir="ltr" role="group" data-i18n-aria="kbLabel" aria-label="كيبورد الخط الكوفي"></div>
+        <button type="button" class="btn ghost kb-native" id="kbNative" data-i18n="kbNative">كيبورد الجهاز</button>
+      </div>
       <div class="kuf-prev" id="kufPrev" aria-live="polite"></div>
       <div class="opts">
         <div class="opt"><label for="kufSize" data-i18n="size">الحجم</label><input type="range" id="kufSize" min="28" max="140" value="72"></div>
@@ -232,6 +237,24 @@
         <button type="button" class="btn ghost" data-act="kuf-ttf" data-i18n="dlKufTtf">تحميل الخط TTF</button>
         <button type="button" class="btn ghost" data-act="kuf-woff" data-i18n="dlKufWoff">WOFF</button>
       </div>
+    </div>
+  </section>
+
+  <section class="wrap sec" id="calc">
+    <h2 data-i18n="calcH">الحاسبة</h2>
+    <p class="sec-sub" data-i18n="calcSub">أرقامها بالخط ذي الزوايا، والنتيجة تظهر مع رمز الدينار. تعمل بالأزرار وبلوحة المفاتيح.</p>
+    <div class="calc" id="calcBox">
+      <div class="c-screen" dir="ltr">
+        <div class="c-expr dg" id="cExpr" aria-hidden="true"></div>
+        <div class="c-val dg" id="cVal" role="status" aria-live="polite">0</div>
+      </div>
+      <div class="c-keys" id="cKeys" dir="ltr"></div>
+      <div class="row-btns">
+        <label class="chk"><input type="checkbox" id="cSym" checked><span data-i18n="cSym">أظهر رمز الدينار</span></label>
+        <button type="button" class="btn" id="cCopy" data-i18n="cCopy">نسخ النتيجة</button>
+        <button type="button" class="btn ghost" id="cClearH" data-i18n="cClearH">مسح السجل</button>
+      </div>
+      <ul class="c-hist" id="cHist" aria-label="سجل العمليات"></ul>
     </div>
   </section>
 

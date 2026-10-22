@@ -66,7 +66,7 @@
     dMask: "يرسم الرمز بلون النص مع أنه صورة، ولا يحتاج ملفات خارجية. الزر ينسخ الكود كاملاً.",
     dReact: "مكوّن جاهز بحجم ولون قابلين للتغيير. الزر ينسخ الكود كاملاً.",
     dFav: "ضع هذا السطر داخل وسم head. لونه هو اللون الذي اخترته أعلاه. الزر ينسخ السطر كاملاً.",
-    copy: "نسخ"
+    copy: "نسخ", kbSpace: "مسافة", kbAlt: "أإ", kbAbc: "ابج", kbNum: "123"
   };
   var EN = {
     nDigits: "Digits", nKufic: "Kufic", digH: "Angular digits", digSub: "Same stroke as the symbol so the figure and the symbol match. Type any number and see it with the symbol.",
@@ -77,6 +77,9 @@
     rMilk: "Milk", rBread: "Bread", rTotal: "Total", rBal: "Your balance", platH: "For ready-made stores",
     platWoo: "A plugin that replaces “د.ع” with the symbol in prices automatically (iqd-symbol.php in the plugin folder).", platShop: "Add iqd-symbol.liquid as a snippet, then put the tag in the currency format.",
     tDigFont: "Font downloaded",
+    nCalc: "Calculator", kbLabel: "Kufic keyboard", kbNative: "Device keyboard", kbSpace: "space", kbAlt: "أإ", kbAbc: "ابج", kbNum: "123",
+    calcH: "Calculator", calcSub: "Its digits use the angular font, and the result shows with the dinar symbol. Works with buttons and the keyboard.",
+    cSym: "Show the dinar symbol", cCopy: "Copy result", cClearH: "Clear history",
     skip: "Skip to content", brand: "Iraqi Dinar Symbol", navLabel: "Page sections", nShow: "Preview", nGet: "Download", nTools: "Tools", nUse: "Usage", nBuild: "Construction",
     langAria: "Change language", themeAria: "Toggle dark and light mode", eyebrow: "Free and open to everyone",
     lede: 'Two letters made of straight lines and a single arc: a vertical bar and an arc, with a horizontal tail leaving it. Flat ends and sharp corners, so <span class="iqd" aria-hidden="true">&#xE900;</span> sits comfortably next to any text or price.',
@@ -127,7 +130,7 @@
     $$("[data-i18n-ph]").forEach(function (e) { e.setAttribute("placeholder", tr(e.dataset.i18nPh)); });
     $("#langBtn").textContent = l === "ar" ? "EN" : "عربي";
     $("#convPrev").setAttribute("data-empty", tr("emptyPrev"));
-    renderTabs(); convert(); if (window.__grid) window.__grid(); save();
+    renderTabs(); convert(); if (window.__grid) window.__grid(); if (window.__kb) window.__kb(); save();
   }
 
   /* ================= رسائل صغيرة ================= */
@@ -483,7 +486,165 @@
   ACTIONS["kuf-copy"] = function () { var t = $("#kufIn").value; t ? copyText(t, "tCopied") : toast("tNothing"); };
   $$("[data-act^='dig-'],[data-act^='kuf-']").forEach(function (b) { b.addEventListener("click", function () { ACTIONS[b.dataset.act](); }); });
 
+
+  /* ================= كيبورد الكوفي ================= */
+  var kufTa = $("#kufIn"), kbEl = $("#kb"), kbLayer = "ar";
+  var KB = {
+    ar: [["ض","ص","ث","ق","ف","غ","ع","ه","خ","ح","ج"], ["ش","س","ي","ب","ل","ا","ت","ن","م","ك","ة"], ["ظ","ط","ذ","د","ز","ر","و","ى","#del"]],
+    alt: [["أ","إ","آ","ؤ","ئ","ء","لا","ـ"], ["َ","ُ","ِ","ّ","ْ","ً","ٌ","ٍ"], ["#del"]],
+    num: [["1","2","3","4","5","6","7","8","9","0"], ["-","/",":","؛","(",")","","&","@","\""], [".","،","؟","!","'","#del"]]
+  };
+  function kIns(t) {
+    var a = kufTa.selectionStart, b = kufTa.selectionEnd;
+    kufTa.setRangeText(t, a, b, "end"); kufTa.dispatchEvent(new Event("input"));
+  }
+  function kDel() {
+    var a = kufTa.selectionStart, b = kufTa.selectionEnd;
+    if (a !== b) kufTa.setRangeText("", a, b, "end"); else if (a > 0) kufTa.setRangeText("", a - 1, a, "end");
+    kufTa.dispatchEvent(new Event("input"));
+  }
+  function kKey(cls, label, act, ch) {
+    var b = document.createElement("button"); b.type = "button"; b.className = "k " + cls; b.textContent = label;
+    if (act) b.dataset.act = act; if (ch !== undefined) b.dataset.ch = ch;
+    return b;
+  }
+  function buildKb() {
+    kbEl.innerHTML = "";
+    KB[kbLayer].forEach(function (row) {
+      var r = document.createElement("div"); r.className = "r";
+      row.forEach(function (c) {
+        if (c === "#del") r.appendChild(kKey("fn", "⌫", "del"));
+        else r.appendChild(kKey(c === "" ? "sym" : "", /^[ً-ْ]$/.test(c) ? "◌" + c : c, null, c));
+      });
+      kbEl.appendChild(r);
+    });
+    var r = document.createElement("div"); r.className = "r";
+    if (kbLayer === "ar") { r.appendChild(kKey("fn", tr("kbNum"), "num")); r.appendChild(kKey("fn", tr("kbAlt"), "alt")); r.appendChild(kKey("fn sym", "", null, "")); }
+    else r.appendChild(kKey("fn", tr("kbAbc"), "ar"));
+    r.appendChild(kKey("sp", tr("kbSpace"), null, " ")); r.appendChild(kKey("fn ret", "↵", null, "\n"));
+    kbEl.appendChild(r);
+  }
+  kbEl.addEventListener("mousedown", function (e) { e.preventDefault(); });
+  kbEl.addEventListener("click", function (e) {
+    var k = e.target.closest(".k"); if (!k) return;
+    var a = k.dataset.act;
+    if (a === "del") kDel(); else if (a) { kbLayer = a; buildKb(); } else if (k.dataset.ch !== undefined) kIns(k.dataset.ch);
+    if (a !== "del" && !a && kbLayer === "alt") { kbLayer = "ar"; buildKb(); }
+    kufTa.focus({ preventScroll: true });
+  });
+  $("#kbNative").addEventListener("click", function () {
+    kufTa.setAttribute("inputmode", "text"); kufTa.blur(); kufTa.focus(); this.hidden = true;
+  });
+  var PHYS = { q:"ض",w:"ص",e:"ث",r:"ق",t:"ف",y:"غ",u:"ع",i:"ه",o:"خ",p:"ح","[":"ج","]":"د",a:"ش",s:"س",d:"ي",f:"ب",g:"ل",h:"ا",j:"ت",k:"ن",l:"م",";":"ك","'":"ط","`":"ذ",z:"ئ",x:"ء",c:"ؤ",v:"ر",b:"لا",n:"ى",m:"ة",",":"و",".":"ز","/":"ظ" };
+  kufTa.addEventListener("keydown", function (e) {
+    if (e.ctrlKey || e.metaKey || e.altKey || e.key.length !== 1) return;
+    var m = PHYS[e.key.toLowerCase()]; if (m) { e.preventDefault(); kIns(m); }
+  });
+
+  /* ================= الحاسبة ================= */
+  var calc = { toks: [], cur: "0", done: false, hist: [] };
+  var OPS = { "+": "+", "-": "−", "*": "×", "/": "÷" };
+  function fmtNum(str) {
+    var neg = str.charAt(0) === "-"; if (neg) str = str.slice(1);
+    var parts = str.split("."), i = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return (neg ? "-" : "") + i + (parts.length > 1 ? "." + parts[1] : "");
+  }
+  function numStr(n) {
+    if (!isFinite(n)) return "—";
+    var t = String(parseFloat(n.toPrecision(12)));
+    if (/e/.test(t)) t = n.toExponential(6);
+    return t;
+  }
+  function evalToks(t) {
+    var a = t.slice(), i;
+    for (i = 1; i < a.length; i += 2) {
+      if (a[i] === "*" || a[i] === "/") {
+        var r = a[i] === "*" ? a[i - 1] * a[i + 1] : a[i - 1] / a[i + 1];
+        a.splice(i - 1, 3, r); i -= 2;
+      }
+    }
+    var v = a[0];
+    for (i = 1; i < a.length; i += 2) v = a[i] === "+" ? v + a[i + 1] : v - a[i + 1];
+    return v;
+  }
+  function cShow() {
+    var sym = $("#cSym").checked;
+    var v = $("#cVal"); v.textContent = fmtNum(calc.cur) + (sym ? " " : "");
+    var len = v.textContent.length; v.style.fontSize = len > 14 ? "28px" : len > 10 ? "36px" : "";
+    $("#cExpr").textContent = calc.toks.map(function (x) { return OPS[x] || fmtNum(String(x)); }).join(" ");
+  }
+  function cDigit(d) {
+    if (calc.done) { calc.cur = "0"; calc.toks = []; calc.done = false; }
+    if (calc.cur === null) calc.cur = "0";
+    if (d === ".") { if (calc.cur.indexOf(".") < 0) calc.cur += "."; }
+    else if (calc.cur.replace(/[-.]/g, "").length < 12) calc.cur = calc.cur === "0" ? d : calc.cur === "-0" ? "-" + d : calc.cur + d;
+    cShow();
+  }
+  function cOp(o) {
+    if (calc.done) calc.done = false;
+    if (calc.cur === null) { calc.toks[calc.toks.length - 1] = o; }
+    else { calc.toks.push(parseFloat(calc.cur), o); calc.cur = null; }
+    if (calc.cur === null) { $("#cVal").textContent = fmtNum(String(calc.toks[calc.toks.length - 2])) + ($("#cSym").checked ? " " : ""); $("#cExpr").textContent = calc.toks.map(function (x) { return OPS[x] || fmtNum(String(x)); }).join(" "); }
+  }
+  function cEq() {
+    if (calc.cur === null) calc.toks.pop();
+    else calc.toks.push(parseFloat(calc.cur));
+    if (calc.toks.length < 2) { calc.cur = calc.cur === null ? numStr(calc.toks[0]) : calc.cur; calc.toks = []; calc.done = true; cShow(); return; }
+    var expr = calc.toks.map(function (x) { return OPS[x] || fmtNum(String(x)); }).join(" ");
+    var res = numStr(evalToks(calc.toks));
+    calc.hist.unshift({ e: expr, r: res }); calc.hist = calc.hist.slice(0, 6);
+    calc.toks = []; calc.cur = res; calc.done = true; cShow(); cHist();
+    $("#cExpr").textContent = expr + " =";
+  }
+  function cHist() {
+    var ul = $("#cHist"); ul.innerHTML = "";
+    calc.hist.forEach(function (h) {
+      var li = document.createElement("li"), b = document.createElement("button"); b.type = "button";
+      b.innerHTML = "<small></small> <span></span>";
+      $("small", b).textContent = h.e + " ="; $("span", b).textContent = fmtNum(h.r);
+      b.addEventListener("click", function () { calc.cur = h.r; calc.toks = []; calc.done = true; cShow(); });
+      li.appendChild(b); ul.appendChild(li);
+    });
+  }
+  function cPress(k) {
+    if (/^[0-9.]$/.test(k)) cDigit(k);
+    else if (OPS[k]) { if (calc.cur === "0" && !calc.toks.length && !calc.done) { /* start with 0 */ } cOp(k); }
+    else if (k === "=") cEq();
+    else if (k === "C") { calc.toks = []; calc.cur = "0"; calc.done = false; cShow(); }
+    else if (k === "B") { if (calc.done || calc.cur === null) return; calc.cur = calc.cur.length > 1 && calc.cur !== "-0" ? calc.cur.slice(0, -1) : "0"; if (calc.cur === "-") calc.cur = "0"; cShow(); }
+    else if (k === "%") { if (calc.cur === null) return; calc.cur = numStr(parseFloat(calc.cur) / 100); cShow(); }
+    else if (k === "N") { if (calc.cur === null) return; calc.cur = calc.cur.charAt(0) === "-" ? calc.cur.slice(1) : (calc.cur === "0" ? "0" : "-" + calc.cur); cShow(); }
+  }
+  (function buildCalc() {
+    var L = [["C","fnc"],["N","fnc","±"],["%","fnc"],["/","op"],["7"],["8"],["9"],["*","op"],["4"],["5"],["6"],["-","op"],["1"],["2"],["3"],["+","op"],["0"],["."],["B","fnc","⌫"],["=","eq"]];
+    var box = $("#cKeys");
+    L.forEach(function (d) {
+      var b = document.createElement("button"); b.type = "button"; b.dataset.k = d[0];
+      b.className = d[1] || ""; b.textContent = d[2] || OPS[d[0]] || d[0];
+      b.setAttribute("aria-label", d[0] === "B" ? "backspace" : d[0] === "N" ? "negate" : b.textContent);
+      box.appendChild(b);
+    });
+    box.addEventListener("click", function (e) { var b = e.target.closest("button"); if (b) cPress(b.dataset.k); });
+  })();
+  document.addEventListener("keydown", function (e) {
+    var t = e.target; if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    var box = $("#calc").getBoundingClientRect();
+    if (box.bottom < 0 || box.top > innerHeight) return;
+    var k = e.key;
+    if (/^[0-9.]$/.test(k) || OPS[k] || k === "%") cPress(k);
+    else if (k === "," ) cPress(".");
+    else if (k === "Enter" || k === "=") { e.preventDefault(); cPress("="); }
+    else if (k === "Backspace") cPress("B");
+    else if (k === "Escape") cPress("C");
+    else return;
+  });
+  $("#cSym").addEventListener("change", function () { if (calc.cur === null) cOp(calc.toks[calc.toks.length - 1]); else cShow(); });
+  $("#cCopy").addEventListener("click", function () { copyText($("#cVal").textContent, "tCopied"); });
+  $("#cClearH").addEventListener("click", function () { calc.hist = []; cHist(); });
+
   /* ================= تشغيل ================= */
+  window.__kb = buildKb; buildKb(); cShow();
   window.__grid = drawGrid; drawDigits(); drawGrid(); drawKuf();
   renderTabs();
   paintStage();
