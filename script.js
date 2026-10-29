@@ -67,14 +67,15 @@
       { c: "", k: list("1234567890", "dg") },
       { c: "", k: arr(["-", "/", ":", "؛", "﴿", "﴾", "\uE900", "٪", "«", "»"]) },
       { c: "n3", k: [F("sym", "#+=")], mid: list(".،؟!ـ"), end: DEL },
-      { c: "r4", k: [F("ar", "ابج", "f4"), F("sym", "۞", "f4"), SP(), RET] }
+      { c: "r4", k: [F("ar", "ابج", "f4"), F("sym", "۞", "f4"), F("cur", "$", "f4"), SP(), RET] }
     ],
     sym: [
-      { c: "", k: arr(["﷽", "ﷲ", "ﷺ", "۞", "۝", "۩", "؍", "؎", "؏", "٭"], "sy") },
-      { c: "", k: arr(["٫", "٬", "۔", "؞", "+", "=", "×", "÷", "(", ")"]) },
-      { c: "n3", k: [F("num", "123", "dg")], mid: arr(["[", "]", "{", "}", "…"]), end: DEL },
-      { c: "r4", k: [F("ar", "ابج", "f4"), SP(), RET] }
-    ]
+      { c: "w1", k: [{ ch: "﷽", label: "﷽", cls: "wide sy2", aria: "بسم الله الرحمن الرحيم" }].concat(arr(["ﷲ", "ﷺ", "۞", "۝", "۩", "؏"], "sy")) },
+      { c: "", k: arr(["٫", "٬", "۔", "؞", "؍", "؎", "٭", "+", "=", "×"]) },
+      { c: "n3", k: [F("num", "123", "dg")], mid: arr(["(", ")", "[", "]", "÷"]), end: DEL },
+      { c: "r4", k: [F("ar", "ابج", "f4"), F("cur", "$", "f4"), SP(), RET] }
+    ],
+    cur: "cur"
   };
 
   function key(d) {
@@ -86,8 +87,38 @@
     if (d.ch !== undefined) b.dataset.ch = d.ch;
     return b;
   }
+
+  /* ================= العملات ================= */
+  var CUR = [
+    ["الدينار العراقي", [["\uE900","IQD"],["\uE901","IQD 1"],["\uE902","IQD 2"],["\uE903","IQD 3"],["\uE904","IQD 4"],["\uE905","IQD 5"],["\uE906","IQD 6"],["\uE907","IQD 7"],["\uE908","IQD 8"],["\uE909","IQD 9"]], "big"],
+    ["العملات العربية", [["ر.س","SAR"],["ر.ع.","OMR"],["د.إ","AED"],["د.ك","KWD"],["د.ب","BHD"],["ر.ق","QAR"],["د.أ","JOD"],["ل.ل","LBP"],["ل.س","SYP"],["ج.م","EGP"],["د.ل","LYD"],["د.ت","TND"],["د.ج","DZD"],["د.م","MAD"],["ج.س","SDG"],["﷼","YER"],["أ.م","MRU"],["Sh","SOS"],["Fdj","DJF"],["CF","KMF"]]],
+    ["الرئيسية", [["$","USD"],["€","EUR"],["£","GBP"],["¥","JPY"],["CN¥","CNY"],["CHF","CHF"],["C$","CAD"],["A$","AUD"],["NZ$","NZD"],["HK$","HKD"],["S$","SGD"],["₹","INR"],["₩","KRW"],["₺","TRY"],["₽","RUB"],["₴","UAH"],["₪","ILS"],["﷼","IRR"],["؋","AFN"]]],
+    ["أوروبا", [["kr","SEK"],["kr","NOK"],["kr","DKK"],["kr","ISK"],["zł","PLN"],["Kč","CZK"],["Ft","HUF"],["lei","RON"],["лв","BGN"],["дин.","RSD"],["L","ALL"],["ден","MKD"],["KM","BAM"],["L","MDL"],["Br","BYN"],["£","GIP"]]],
+    ["الأمريكتان", [["Mex$","MXN"],["R$","BRL"],["AR$","ARS"],["CL$","CLP"],["COL$","COP"],["S/","PEN"],["$U","UYU"],["₲","PYG"],["Bs.","BOB"],["Bs.S","VES"],["Q","GTQ"],["L","HNL"],["C$","NIO"],["₡","CRC"],["B/.","PAB"],["RD$","DOP"],["₱","CUP"],["J$","JMD"],["TT$","TTD"],["Bds$","BBD"],["B$","BSD"],["G","HTG"],["BZ$","BZD"],["G$","GYD"],["Sr$","SRD"],["EC$","XCD"],["ƒ","AWG"],["ƒ","ANG"],["CI$","KYD"],["BD$","BMD"]]],
+    ["أفريقيا", [["R","ZAR"],["₦","NGN"],["₵","GHS"],["KSh","KES"],["USh","UGX"],["TSh","TZS"],["Br","ETB"],["FRw","RWF"],["CFA","XOF"],["FCFA","XAF"],["MT","MZN"],["ZK","ZMW"],["P","BWP"],["N$","NAD"],["Kz","AOA"],["Ar","MGA"],["₨","MUR"],["₨","SCR"],["MK","MWK"],["L","LSL"],["E","SZL"],["D","GMD"],["Le","SLE"],["L$","LRD"],["FG","GNF"],["FC","CDF"],["FBu","BIF"],["Nfk","ERN"],["Esc","CVE"],["Db","STN"]]],
+    ["آسيا والمحيط الهادئ", [["₨","PKR"],["৳","BDT"],["Rs","LKR"],["Rs","NPR"],["฿","THB"],["₫","VND"],["₱","PHP"],["Rp","IDR"],["RM","MYR"],["₸","KZT"],["₾","GEL"],["֏","AMD"],["₼","AZN"],["NT$","TWD"],["MOP$","MOP"],["K","MMK"],["៛","KHR"],["₭","LAK"],["₮","MNT"],["B$","BND"],["с","KGS"],["SM","TJS"],["m","TMT"],["soʻm","UZS"],["Nu.","BTN"],["Rf","MVR"],["K","PGK"],["FJ$","FJD"],["T","WST"],["T$","TOP"],["VT","VUV"],["SI$","SBD"],["₣","XPF"]]]
+  ];
+  var DEL4 = { act: "del", icon: ICON_DEL, cls: "fn dia", aria: "حذف" };
+  function buildCur() {
+    var box = document.createElement("div"); box.className = "cur"; box.setAttribute("role", "group"); box.setAttribute("aria-label", "العملات");
+    CUR.forEach(function (sec) {
+      var h = document.createElement("div"); h.className = "ch"; h.textContent = sec[0]; box.appendChild(h);
+      sec[1].forEach(function (it) {
+        var b = document.createElement("button"); b.type = "button"; b.className = "k " + (sec[2] || "");
+        b.dataset.ch = it[0]; b.setAttribute("aria-label", it[1]);
+        var a = document.createElement("span"); a.textContent = it[0];
+        var s = document.createElement("small"); s.textContent = it[1];
+        b.appendChild(a); b.appendChild(s); box.appendChild(b);
+      });
+    });
+    rowsEl.appendChild(box);
+    var r = document.createElement("div"); r.className = "r r4";
+    [F("ar", "ابج", "f4"), F("num", "123", "f4 dg"), SP(), DEL4, RET].forEach(function (d) { r.appendChild(key(d)); });
+    rowsEl.appendChild(r);
+  }
   function build() {
     rowsEl.textContent = "";
+    if (layer === "cur") { buildCur(); return; }
     LAYERS[layer].forEach(function (row) {
       var r = document.createElement("div"); r.className = "r " + row.c;
       row.k.forEach(function (d) { r.appendChild(key(d)); });
