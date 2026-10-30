@@ -7,7 +7,7 @@
   function safeSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
 
   /* ================= الخطوط (الأرقام ثابتة دائماً بخط الزوايا) ================= */
-  var TAIL = ',"IQD Symbol","Amiri","Noto Naskh Arabic","Segoe UI Symbol",serif';
+  var TAIL = ',"IQD Symbol",system-ui,-apple-system,"Amiri","Noto Naskh Arabic","Segoe UI Symbol",serif';
   var FONTS = [
     { id: "kufic", name: "كوفي قديم", fam: '"Iraq Kufic"' },
     { id: "reem",  name: "ريم كوفي",  fam: '"Reem Kufi"' },
@@ -71,7 +71,7 @@
       { c: "r4", k: [F("ar", "ابج", "f4"), F("sym", "۞", "f4"), SP(), RET] }
     ],
     sym: [
-      { c: "w1", k: [C("؏", "fit g12"), C("صلى الله عليه وآله وسلم", "fit g24", "صلى الله عليه\nوآله وسلم"), C("ﷻ", "fit g12"), C("ﷲ", "fit g12"), C("﷽", "fit g32")] },
+      { c: "w1", k: [C("؏", "fit g12"), C("\uE90B", "fit g16", "\uE90B"), C("\uE90A", "fit g16", "\uE90A"), C("ﷻ", "fit g12"), C("ﷲ", "fit g12"), C("﷽", "fit g28")] },
       { c: "", k: arr(["۞", "۝", "۩", "؍", "؎", "٭", "۔", "؞", "٫", "٬"], "sy") },
       { c: "n3", k: [F("num", "123", "dg")], mid: arr(["(", ")", "«", "»", "٪", "+", "=", "×", "÷"]), end: DEL },
       { c: "r4", k: [F("ar", "ابج", "f4"), SP(), RET] }
@@ -82,7 +82,11 @@
     var b = document.createElement("button");
     b.type = "button"; b.className = "k " + (d.cls || "");
     if (d.icon) b.innerHTML = d.icon;
-    else if ((d.cls || "").indexOf("fit") > -1) { var sp = document.createElement("span"); sp.className = "fi"; sp.textContent = d.label; b.appendChild(sp); }
+    else if ((d.cls || "").indexOf("fit") > -1) {
+      var sp = document.createElement("span"); sp.className = "fi"; var cv = document.createElement("canvas"); cv.setAttribute("aria-hidden", "true");
+      sp.appendChild(cv); b.appendChild(sp); b._lab = d.label;
+      if (!d.aria) b.setAttribute("aria-label", d.label === "\uE90A" ? "صلى الله عليه وسلم" : d.label === "\uE90B" ? "صلى الله عليه وآله وسلم" : d.label.replace(/\n/g, " "));
+    }
     else b.textContent = d.label;
     if (d.cur) b.dataset.cur = "1";
     if (d.aria) b.setAttribute("aria-label", d.aria);
@@ -116,14 +120,25 @@
     fit();
   }
   function fit() {
+    var PX = 200;
     Array.prototype.forEach.call(rowsEl.querySelectorAll(".k.fit"), function (k) {
-      var s = k.firstChild; s.style.transform = "none";
-      var w = s.offsetWidth, h = s.offsetHeight; if (!w || !h) return;
-      var f = Math.min(k.clientWidth * 0.88 / w, k.clientHeight * 0.8 / h, 2.6);
-      s.style.transform = "scale(" + f + ")";
+      var c = k.querySelector("canvas"); if (!c || !k._lab) return;
+      var cs = getComputedStyle(k), font = "400 " + PX + "px " + cs.fontFamily, lines = k._lab.split("\n");
+      var ctx = c.getContext("2d"); ctx.font = font; ctx.direction = "rtl"; ctx.textAlign = "center";
+      var m = lines.map(function (t) { return ctx.measureText(t); }), lh = PX * 1.25, L = 0, R = 0;
+      m.forEach(function (x) { L = Math.max(L, x.actualBoundingBoxLeft); R = Math.max(R, x.actualBoundingBoxRight); });
+      var asc = m[0].actualBoundingBoxAscent, desc = m[m.length - 1].actualBoundingBoxDescent;
+      var w = Math.ceil(L + R) + 8, h = Math.ceil(asc + desc + lh * (lines.length - 1)) + 8;
+      if (w < 12 || h < 12) return;
+      c.width = w; c.height = h;
+      ctx = c.getContext("2d"); ctx.font = font; ctx.direction = "rtl"; ctx.textAlign = "center"; ctx.fillStyle = cs.color;
+      lines.forEach(function (t, i) { ctx.fillText(t, L + 4, 4 + asc + i * lh); });
+      var sc = Math.min(k.clientWidth * 0.86 / w, k.clientHeight * 0.78 / h, k.clientHeight * 0.7 / PX);
+      c.style.width = Math.round(w * sc) + "px"; c.style.height = Math.round(h * sc) + "px";
     });
   }
   window.addEventListener("resize", fit);
+  if (window.matchMedia) { var mq = window.matchMedia("(prefers-color-scheme: dark)"); if (mq.addEventListener) mq.addEventListener("change", fit); }
   if (document.fonts) { document.fonts.addEventListener("loadingdone", fit); document.fonts.ready.then(fit); }
   function go(l) { layer = l; build(); fit(); }
 
@@ -172,8 +187,8 @@
     "ء": ["أ", "إ", "ؤ", "ئ"], "-": ["ـ", "–"], ".": ["،", "؛", "؟"], "،": [".", "؛"],
     "ﷲ": ["ﷻ"]
   };
-  ALTS["ﷺ"] = ["صلى الله عليه وآله وسلم", VOC];
-  ALTS["صلى الله عليه وآله وسلم"] = [VOC, "ﷺ"];
+  ALTS["\uE90A"] = ["ﷺ", "\uE90B"];
+  ALTS["\uE90B"] = ["صلى الله عليه وآله وسلم", VOC, "\uE90A"];
   var pv = null, altBox = null, holdAlt = 0, suppress = false, altKey = null;
   function rel(el) { var a = el.getBoundingClientRect(), b = kbd.getBoundingClientRect(); return { l: a.left - b.left, t: a.top - b.top, w: a.width, h: a.height, W: b.width }; }
   function clampL(l, w, W) { return Math.max(2, Math.min(l, W - w - 2)); }
@@ -276,11 +291,14 @@
 
   /* أدوات النص */
   var copyBtn = $("#copy");
+  function plain(t) {
+    return t.replace(/\uE90A/g, "ﷺ").replace(/\uE90B/g, "صلى الله عليه وآله وسلم").replace(/[\uE900-\uE909]/g, "د.ع");
+  }
   copyBtn.addEventListener("click", function () {
     var done = function () { copyBtn.textContent = "تم النسخ"; setTimeout(function () { copyBtn.textContent = "نسخ"; }, 1200); };
     if (!ta.value) return;
-    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(ta.value).then(done, function () {}); }
-    else { ta.select(); try { if (document.execCommand("copy")) done(); } catch (er) {} }
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(plain(ta.value)).then(done, function () {}); }
+    else { var keep = ta.value; ta.value = plain(keep); ta.select(); try { if (document.execCommand("copy")) done(); } catch (er) {} ta.value = keep; }
     ta.focus({ preventScroll: true });
   });
   $("#clear").addEventListener("click", function () { ta.value = ""; ta.focus({ preventScroll: true }); });
