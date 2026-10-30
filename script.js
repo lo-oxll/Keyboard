@@ -71,7 +71,7 @@
       { c: "r4", k: [F("ar", "ابج", "f4"), F("sym", "۞", "f4"), SP(), RET] }
     ],
     sym: [
-      { c: "w1", k: [C("؏", "fit g14"), C("صلى الله عليه وآله وسلم", "fit g28", "صلى الله عليه\nوآله وسلم"), C("ﷲ", "fit g14"), C("﷽", "fit g36")] },
+      { c: "w1", k: [C("؏", "fit g12"), C("صلى الله عليه وآله وسلم", "fit g24", "صلى الله عليه\nوآله وسلم"), C("ﷻ", "fit g12"), C("ﷲ", "fit g12"), C("﷽", "fit g32")] },
       { c: "", k: arr(["۞", "۝", "۩", "؍", "؎", "٭", "۔", "؞", "٫", "٬"], "sy") },
       { c: "n3", k: [F("num", "123", "dg")], mid: arr(["(", ")", "«", "»", "٪", "+", "=", "×", "÷"]), end: DEL },
       { c: "r4", k: [F("ar", "ابج", "f4"), SP(), RET] }
@@ -228,6 +228,10 @@
     suppress = false;
     if (altBox && !(e.target.closest(".alts"))) closeAlts();
     if (!k) return;
+    if (k.dataset.ch === " ") {
+      spStart = spLast = e.clientX; clearTimeout(holdAlt);
+      holdAlt = setTimeout(function () { trk = { last: spLast, acc: 0 }; suppress = true; kbd.classList.add("trk"); vib(12); ta.focus({ preventScroll: true }); }, 350);
+    }
     if (k.dataset.ch !== undefined && k.dataset.ch !== " " && k.dataset.ch !== "\n") {
       vib(6);
       if (!ALTS[k.dataset.ch] || k.dataset.ch.length <= 2) showPv(k);
@@ -235,13 +239,29 @@
       else if (ALTS[k.dataset.ch]) { clearTimeout(holdAlt); holdAlt = setTimeout(function () { showAlts(k); }, 380); }
     }
   });
+  var spStart = null, spLast = 0, trk = null, STEP = 9;
+  function moveCaret(dir) {
+    var pos = ta.selectionStart, ch = ta.value.charAt(pos) || ta.value.charAt(pos - 1) || "";
+    var rtl = !/[A-Za-z0-9]/.test(ch), d = rtl ? -dir : dir;
+    var np = Math.max(0, Math.min(ta.value.length, pos + d));
+    if (np !== pos) { ta.setSelectionRange(np, np); vib(4); }
+  }
   rowsEl.addEventListener("pointermove", function (e) {
+    if (spStart !== null) {
+      if (!trk) { if (Math.abs(e.clientX - spStart) > 14) { clearTimeout(holdAlt); spStart = null; } else spLast = e.clientX; }
+      else {
+        trk.acc += e.clientX - trk.last; trk.last = e.clientX;
+        while (Math.abs(trk.acc) >= STEP) { var sg = trk.acc > 0 ? 1 : -1; trk.acc -= sg * STEP; moveCaret(sg); }
+        ta.focus({ preventScroll: true });
+      }
+    }
     if (!altBox || altBox.classList.contains("curpop")) return;
     var el = document.elementFromPoint(e.clientX, e.clientY);
     Array.prototype.forEach.call(altBox.children, function (c) { c.classList.toggle("on", c === el); });
   });
   function up(e) {
     clearTimeout(holdAlt); hidePv();
+    spStart = null; if (trk) { trk = null; kbd.classList.remove("trk"); }
     if (altBox && !altBox.classList.contains("curpop") && e.type === "pointerup") {
       var el = document.elementFromPoint(e.clientX, e.clientY);
       if (el && el.classList && el.classList.contains("alt")) { pickAlt(el.dataset.v); }
@@ -264,6 +284,154 @@
     ta.focus({ preventScroll: true });
   });
   $("#clear").addEventListener("click", function () { ta.value = ""; ta.focus({ preventScroll: true }); });
+
+  /* ================= المحاذاة ================= */
+  var align = safeGet("kb-align"); if (["right", "center", "left"].indexOf(align) < 0) align = "right";
+  var alBtns = document.querySelectorAll("[data-al]");
+  function setAlign(a) {
+    align = a; ta.style.textAlign = a; safeSet("kb-align", a);
+    Array.prototype.forEach.call(alBtns, function (b) { b.setAttribute("aria-pressed", String(b.dataset.al === a)); });
+  }
+  Array.prototype.forEach.call(alBtns, function (b) { b.addEventListener("click", function () { setAlign(b.dataset.al); ta.focus({ preventScroll: true }); }); });
+  setAlign(align);
+
+  /* ================= الحفظ كصورة ================= */
+  var FMT = [
+    { id: "png",  name: "PNG",  mime: "image/png" },
+    { id: "jpg",  name: "JPG",  mime: "image/jpeg", opaque: true },
+    { id: "webp", name: "WebP", mime: "image/webp" },
+    { id: "svg",  name: "SVG",  mime: "image/svg+xml" },
+    { id: "bmp",  name: "BMP",  mime: "image/bmp", opaque: true }
+  ];
+  var BGS = [{ id: "white", name: "أبيض" }, { id: "black", name: "أسود" }, { id: "none", name: "شفاف" }];
+  var fmt = "png", bgSel = "white";
+  var dlg = $("#exp"), prev = $("#expPrev"), note = $("#expNote"), fmtGrp = $("#fmtGrp"), bgGrp = $("#bgGrp");
+  var IW = 1080, IP = 72, IF = 64, ILH = 110;
+
+  function chips(host, arr, getter, setter) {
+    arr.forEach(function (o) {
+      var b = document.createElement("button"); b.type = "button"; b.className = "opt"; b.setAttribute("role", "radio"); b.dataset.id = o.id; b.textContent = o.name;
+      b.addEventListener("click", function () { setter(o.id); sync(); render(); });
+      host.appendChild(b);
+    });
+  }
+  function sync() {
+    Array.prototype.forEach.call(fmtGrp.children, function (b) { b.setAttribute("aria-checked", String(b.dataset.id === fmt)); });
+    var f = FMT.filter(function (x) { return x.id === fmt; })[0];
+    Array.prototype.forEach.call(bgGrp.children, function (b) {
+      b.setAttribute("aria-checked", String(b.dataset.id === eff())); b.disabled = !!(f.opaque && b.dataset.id === "none");
+    });
+    note.textContent = f.opaque ? "هذه الصيغة لا تدعم الشفافية، تُحفظ بخلفية بيضاء عند اختيار «شفاف»." : (f.id === "svg" ? "الخطوط المحلية تُضمَّن داخل الملف، وخطوط Google تتطلب اتصالاً عند فتحه." : "");
+  }
+  function eff() { var f = FMT.filter(function (x) { return x.id === fmt; })[0]; return (f.opaque && bgSel === "none") ? "white" : bgSel; }
+  chips(fmtGrp, FMT, null, function (v) { fmt = v; });
+  chips(bgGrp, BGS, null, function (v) { bgSel = v; });
+
+  function wrap(ctx, text, maxW) {
+    var out = [];
+    text.split("\n").forEach(function (par) {
+      if (!par) { out.push(""); return; }
+      var cur = "";
+      par.split(" ").forEach(function (w) {
+        var t = cur ? cur + " " + w : w;
+        if (cur && ctx.measureText(t).width > maxW) { out.push(cur); cur = w; } else cur = t;
+      });
+      out.push(cur);
+    });
+    return out;
+  }
+  function famStack() { return stack(FONTS[fontIdx]); }
+  function layoutText() {
+    var c = document.createElement("canvas"), ctx = c.getContext("2d");
+    ctx.font = "400 " + IF + "px " + famStack(); ctx.direction = "rtl";
+    var lines = wrap(ctx, ta.value.replace(/\r/g, ""), IW - IP * 2);
+    return { lines: lines, H: Math.max(IP * 2 + lines.length * ILH, 200) };
+  }
+  function lineX() { return align === "right" ? IW - IP : (align === "center" ? IW / 2 : IP); }
+  function drawTo(cv, scale) {
+    var L = layoutText(), bg = eff();
+    cv.width = Math.round(IW * scale); cv.height = Math.round(L.H * scale);
+    var ctx = cv.getContext("2d"); ctx.scale(scale, scale);
+    if (bg !== "none") { ctx.fillStyle = bg === "black" ? "#000" : "#fff"; ctx.fillRect(0, 0, IW, L.H); }
+    ctx.fillStyle = bg === "black" ? "#fff" : "#12141c";
+    ctx.font = "400 " + IF + "px " + famStack(); ctx.direction = "rtl"; ctx.textBaseline = "middle"; ctx.textAlign = align;
+    L.lines.forEach(function (t, i) { if (t) ctx.fillText(t, lineX(), IP + (i + 0.5) * ILH); });
+    return L;
+  }
+  function render() {
+    var f = famStack();
+    var p = (document.fonts && document.fonts.load) ? Promise.all([document.fonts.load("400 " + IF + "px " + f, ta.value || "ا"), document.fonts.load("400 " + IF + "px \"Iraq Digits\"", "0123456789")]) : Promise.resolve();
+    p.catch(function () {}).then(function () { drawTo(prev, 0.5); });
+  }
+  function bmpBlob(cv) {
+    var w = cv.width, h = cv.height, d = cv.getContext("2d").getImageData(0, 0, w, h).data;
+    var rs = Math.ceil(w * 3 / 4) * 4, size = 54 + rs * h, buf = new ArrayBuffer(size), v = new DataView(buf);
+    v.setUint8(0, 0x42); v.setUint8(1, 0x4D); v.setUint32(2, size, true); v.setUint32(10, 54, true); v.setUint32(14, 40, true);
+    v.setInt32(18, w, true); v.setInt32(22, h, true); v.setUint16(26, 1, true); v.setUint16(28, 24, true); v.setUint32(34, rs * h, true);
+    v.setInt32(38, 2835, true); v.setInt32(42, 2835, true);
+    for (var y = 0; y < h; y++) {
+      var o = 54 + (h - 1 - y) * rs;
+      for (var x = 0; x < w; x++) { var i = (y * w + x) * 4; v.setUint8(o + x * 3, d[i + 2]); v.setUint8(o + x * 3 + 1, d[i + 1]); v.setUint8(o + x * 3 + 2, d[i]); }
+    }
+    return new Blob([buf], { type: "image/bmp" });
+  }
+  function esc(t) { return t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+  function fontCss() {
+    var out = "";
+    try {
+      Array.prototype.forEach.call(document.styleSheets, function (sh) {
+        var rules; try { rules = sh.cssRules; } catch (e) { return; }
+        Array.prototype.forEach.call(rules, function (r) {
+          if (r.type === 5 && /Iraq Kufic|Iraq Digits|IQD Symbol/.test(r.cssText)) out += r.cssText + "\n";
+        });
+      });
+    } catch (e) {}
+    if (out) return Promise.resolve(out);
+    return fetch("style.css").then(function (r) { return r.text(); }).then(function (t) {
+      return (t.match(/@font-face\{[^}]*\}/g) || []).filter(function (x) { return /Iraq Kufic|Iraq Digits|IQD Symbol/.test(x); }).join("\n");
+    }).catch(function () { return ""; });
+  }
+  function svgBlob() {
+    return fontCss().then(function (css) {
+      var L = layoutText(), bg = eff(), anchor = align === "right" ? "start" : (align === "center" ? "middle" : "end");
+      var fam = famStack().replace(/"/g, "'");
+      var imp = "@import url('https://fonts.googleapis.com/css2?family=Reem+Kufi&family=Noto+Kufi+Arabic&family=Kufam&family=Reem+Kufi+Ink&family=Amiri&display=swap');\n";
+      var body = L.lines.map(function (t, i) { return t ? '<text x="' + lineX() + '" y="' + (IP + (i + 0.5) * ILH) + '">' + esc(t) + '</text>' : ""; }).join("\n");
+      var rect = bg === "none" ? "" : '<rect width="100%" height="100%" fill="' + (bg === "black" ? "#000" : "#fff") + '"/>';
+      var svg = '<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="' + IW + '" height="' + L.H + '" viewBox="0 0 ' + IW + ' ' + L.H + '">\n<style>' + imp + css + '</style>\n' + rect +
+        '\n<g xml:space="preserve" direction="rtl" text-anchor="' + anchor + '" dominant-baseline="central" font-size="' + IF + '" fill="' + (bg === "black" ? "#fff" : "#12141c") + '" style="font-family:' + fam + '">\n' + body + '\n</g>\n</svg>';
+      return new Blob([svg], { type: "image/svg+xml" });
+    });
+  }
+  function toBlob(cv, mime) { return new Promise(function (res) { cv.toBlob(res, mime, 0.95); }); }
+  function save(blob, ext) {
+    var u = URL.createObjectURL(blob), a = document.createElement("a");
+    a.href = u; a.download = "kufic-text." + ext; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(u); }, 5000);
+  }
+  function exportNow() {
+    var f = FMT.filter(function (x) { return x.id === fmt; })[0], go = $("#expGo");
+    go.disabled = true; note.textContent = "جارٍ التجهيز...";
+    var done = function () { go.disabled = false; sync(); };
+    var fail = function () { note.textContent = "تعذر إنشاء الصورة. جرّب صيغة أخرى."; go.disabled = false; };
+    if (f.id === "svg") { svgBlob().then(function (b) { save(b, "svg"); done(); }, fail); return; }
+    var cv = document.createElement("canvas"); drawTo(cv, 1);
+    if (f.id === "bmp") { save(bmpBlob(cv), "bmp"); done(); return; }
+    toBlob(cv, f.mime).then(function (b) {
+      if (!b) { fail(); return; }
+      var ext = b.type === "image/png" ? "png" : (b.type === "image/jpeg" ? "jpg" : "webp");
+      save(b, ext); done();
+      if (f.id === "webp" && ext !== "webp") note.textContent = "متصفحك لا يدعم WebP فحُفظت الصورة بصيغة PNG.";
+    }, fail);
+  }
+  $("#save").addEventListener("click", function () {
+    if (!ta.value.trim()) { var s0 = $("#save"); s0.textContent = "اكتب نصًا أولاً"; setTimeout(function () { s0.textContent = "حفظ كصورة"; }, 1400); return; }
+    if (!dlg.showModal) return;
+    sync(); render(); dlg.showModal();
+  });
+  $("#expGo").addEventListener("click", exportNow);
+  $("#expX").addEventListener("click", function () { dlg.close(); });
+  dlg.addEventListener("close", function () { ta.focus({ preventScroll: true }); });
 
   /* كيبورد الجهاز الفعلي (حاسوب) */
   var PHYS = { q:"ض",w:"ص",e:"ث",r:"ق",t:"ف",y:"غ",u:"ع",i:"ه",o:"خ",p:"ح","[":"ج","]":"د",a:"ش",s:"س",d:"ي",f:"ب",g:"ل",h:"ا",j:"ت",k:"ن",l:"م",";":"ك","'":"ط","`":"ذ",z:"ئ",x:"ء",c:"ؤ",v:"ر",b:"لا",n:"ى",m:"ة",",":"و",".":"ز","/":"ظ" };

@@ -69,9 +69,9 @@ body{background:var(--bg);color:var(--ink);-webkit-text-size-adjust:100%;overscr
 
 .k.sy2{font-size:4.6cqw;overflow:hidden}
 .r.w1 .k{flex:1 1 0}
-.r.w1 .k.g14{flex:14 1 0}
-.r.w1 .k.g28{flex:28 1 0}
-.r.w1 .k.g36{flex:36 1 0}
+.r.w1 .k.g12{flex:12 1 0}
+.r.w1 .k.g24{flex:24 1 0}
+.r.w1 .k.g32{flex:32 1 0}
 
 .k{-webkit-touch-callout:none;transition:transform .05s}
 .k:active{transform:translateY(.2cqw);box-shadow:none}
@@ -83,7 +83,7 @@ body{background:var(--bg);color:var(--ink);-webkit-text-size-adjust:100%;overscr
 .alts{position:absolute;z-index:40;display:flex;gap:.8cqw;padding:1cqw;background:var(--key);border-radius:2.4cqw;box-shadow:0 .8cqw 3cqw rgba(0,0,0,.4)}
 .alt{border:0;background:transparent;color:var(--keyink);font-family:var(--kb-font);border-radius:1.6cqw;cursor:pointer;padding:0 1cqw;line-height:1.3;display:flex;align-items:center;justify-content:center;text-align:center}
 .alt.on,.alt:hover{background:var(--accent);color:#fff}
-.tools{display:flex;gap:8px;padding:10px 12px 0;direction:rtl}
+.tools{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 12px 0;direction:rtl}
 .tools button{border:0;border-radius:8px;padding:7px 14px;background:color-mix(in srgb,var(--ink) 9%,transparent);color:var(--ink);font:600 14px/1 system-ui,"Segoe UI",Tahoma,sans-serif;cursor:pointer}
 .tools button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
@@ -94,3 +94,25 @@ body{background:var(--bg);color:var(--ink);-webkit-text-size-adjust:100%;overscr
 .curpop .ci{flex-direction:column;gap:.5cqw;height:11.5cqw;font-size:5cqw;background:color-mix(in srgb,var(--keyink) 6%,transparent);white-space:nowrap;overflow:hidden}
 .curpop .ci.big{font-size:6.4cqw}
 .curpop .ci small{font:600 2.4cqw/1 system-ui,"Segoe UI",sans-serif;opacity:.65}
+
+.seg{display:flex;margin-inline-start:auto;border-radius:8px;background:color-mix(in srgb,var(--ink) 9%,transparent);padding:2px;gap:2px}
+.tools .seg button{padding:5px 8px;background:transparent;display:grid;place-items:center}
+.tools .seg button[aria-pressed="true"]{background:var(--bg);box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.seg svg{width:20px;height:20px;fill:none;stroke:var(--ink);stroke-width:1.8;stroke-linecap:round}
+.kbd.trk .k:not(.sp){color:transparent}
+.kbd.trk .k:not(.sp) svg{opacity:0}
+.kbd.trk .chip{opacity:.35}
+.exp{border:0;border-radius:18px;padding:16px;width:min(92vw,520px);background:var(--bg);color:var(--ink);font-family:system-ui,"Segoe UI",Tahoma,sans-serif;direction:rtl}
+.exp::backdrop{background:rgba(0,0,0,.5)}
+.exp h2{margin:0 0 10px;font-size:18px}
+.prev{display:block;width:100%;max-height:38vh;object-fit:contain;border:1px solid color-mix(in srgb,var(--ink) 18%,transparent);border-radius:10px;background:repeating-conic-gradient(#ccc 0 25%,#fff 0 50%) 0 0/16px 16px}
+.grp{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.opt{border:1px solid color-mix(in srgb,var(--ink) 25%,transparent);background:transparent;color:var(--ink);border-radius:999px;padding:8px 16px;font:600 14px/1 system-ui,"Segoe UI",Tahoma,sans-serif;cursor:pointer}
+.opt[aria-checked="true"]{background:var(--ink);color:var(--bg)}
+.opt:disabled{opacity:.35;cursor:not-allowed}
+.note{min-height:1.4em;margin:10px 0 0;font-size:13px;opacity:.75}
+.acts{display:flex;gap:8px;margin-top:12px}
+.acts button{flex:1;border:0;border-radius:10px;padding:12px;font:600 15px/1 system-ui,"Segoe UI",Tahoma,sans-serif;cursor:pointer;background:color-mix(in srgb,var(--ink) 10%,transparent);color:var(--ink)}
+.acts .pri{background:var(--accent);color:#fff}
+.acts button:disabled{opacity:.5}
+.opt:focus-visible,.acts button:focus-visible,.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}

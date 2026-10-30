@@ -12,7 +12,16 @@
 </head>
 <body>
 <main class="app">
-  <div class="tools"><button type="button" id="copy">نسخ</button><button type="button" id="clear">مسح</button></div>
+  <div class="tools" role="toolbar" aria-label="أدوات النص">
+    <button type="button" id="copy">نسخ</button>
+    <button type="button" id="save">حفظ كصورة</button>
+    <button type="button" id="clear">مسح</button>
+    <div class="seg" role="group" aria-label="محاذاة النص">
+      <button type="button" data-al="right" aria-label="محاذاة لليمين" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M10 12h10M6 18h14"/></svg></button>
+      <button type="button" data-al="center" aria-label="توسيط" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M5 18h14"/></svg></button>
+      <button type="button" data-al="left" aria-label="محاذاة لليسار" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h14"/></svg></button>
+    </div>
+  </div>
   <textarea id="ta" class="ta" dir="rtl" rows="1" inputmode="none" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="اكتب هنا..." aria-label="النص"></textarea>
   <section class="kbd" aria-label="الكيبورد">
     <div class="bar" id="fontBar" role="radiogroup" aria-label="الخط"></div>
@@ -24,6 +33,14 @@
     </div>
   </section>
 </main>
+<dialog id="exp" class="exp" aria-labelledby="expT">
+  <h2 id="expT">حفظ كصورة</h2>
+  <canvas id="expPrev" class="prev" aria-label="معاينة الصورة"></canvas>
+  <div class="grp" role="radiogroup" aria-label="الصيغة" id="fmtGrp"></div>
+  <div class="grp" role="radiogroup" aria-label="الخلفية" id="bgGrp"></div>
+  <p class="note" id="expNote" role="status"></p>
+  <div class="acts"><button type="button" id="expGo" class="pri">تنزيل</button><button type="button" id="expX">إغلاق</button></div>
+</dialog>
 <script src="script.js"></script>
 </body>
 </html>
